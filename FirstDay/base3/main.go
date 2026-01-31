@@ -11,6 +11,7 @@ func main() {
 
 	engine.GET("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello Jee")
+		fmt.Printf("test")
 
 	})
 	engine.POST("/hello", func(w http.ResponseWriter, r *http.Request) {

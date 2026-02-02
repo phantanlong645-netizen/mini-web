@@ -1,19 +1,18 @@
 package Jee
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 )
 
-type HandlerFunc func(w http.ResponseWriter, r *http.Request)
+type HandlerFunc func(*Context)
 type engine struct {
-	router map[string]HandlerFunc
+	router *router
 }
 
 func NewEngine() *engine {
 	engine := &engine{
-		router: make(map[string]HandlerFunc),
+		router: newRouter(),
 	}
 	return engine
 }
@@ -21,7 +20,7 @@ func NewEngine() *engine {
 func (engine *engine) AddRoute(Method string, url string, handler HandlerFunc) {
 	key := Method + "-" + url
 	log.Printf("新加了路由 %s    %s", key, url)
-	engine.router[key] = handler
+	engine.router.Addroute(Method, url, handler)
 }
 func (engine *engine) GET(url string, handler HandlerFunc) {
 	engine.AddRoute("GET", url, handler)
@@ -34,11 +33,7 @@ func (engine *engine) Run(addr string) {
 	log.Fatal(http.ListenAndServe(addr, engine))
 }
 func (engine *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	key := req.URL.Path + "-" + req.Method
-	if handler, ok := engine.router[key]; ok {
-		handler(w, req)
-	} else {
-		fmt.Fprintf(w, "404 Not Found")
-	}
+	c := newContext(w, req)
+	engine.router.handle(c)
 
 }

@@ -38,6 +38,7 @@ func (router *router) Addroute(Method string, url string, handler HandlerFunc) {
 	if _, ok := router.route[Method]; !ok {
 		router.route[Method] = &node{}
 	}
+	//根据不同的请求方法 分为不同的树
 	router.route[Method].insert(url, Parts, 0)
 	router.handlers[key] = handler
 }

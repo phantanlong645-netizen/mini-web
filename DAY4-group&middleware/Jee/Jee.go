@@ -3,6 +3,7 @@ package Jee
 import (
 	"log"
 	"net/http"
+	"strings"
 )
 
 type HandlerFunc func(*Context)
@@ -35,6 +36,10 @@ func (routegroup *RouteGroup) Group(prefix string) *RouteGroup {
 	return newRouteGroup
 }
 
+func (routeGroup *RouteGroup) Use(handlers ...HandlerFunc) {
+	routeGroup.middlewares = append(routeGroup.middlewares, handlers...)
+}
+
 func (routegroup *RouteGroup) addRoute(method string, comb string, handler HandlerFunc) {
 	pattern := routegroup.prefix + "-" + comb
 	log.Printf("Route %4s - %s", method, pattern)
@@ -54,6 +59,14 @@ func (engine *engine) Run(addr string) (err error) {
 }
 
 func (engine *engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	var middlewares []HandlerFunc
+	for _, group := range engine.groups {
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			middlewares = append(middlewares, group.middlewares...)
+		}
+	}
 	c := newContext(w, req)
+	c.handlers = middlewares
 	engine.router.handle(c)
+
 }
